@@ -1,13 +1,13 @@
 #  Skill Name
+Skill 01
+Author: Shazor Shahid
 
-Author: FirstName LastName
-
-Date: YYYY-MM-DD
+Date: 2020-09-04
 -----
 
 ## Summary
-
-
+using Visual Studio Code
+established a working directory
 ## Sketches and Photos
 
 

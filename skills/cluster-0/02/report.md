@@ -1,12 +1,12 @@
-#  Skill Name
+#  Set up and Use GitHub Invidually
 
-Author: FirstName LastName
+Author: Shazor Shahid
 
-Date: YYYY-MM-DD
+Date: 2020-09-04
 -----
 
 ## Summary
-
+created new repo for Skill 02
 
 ## Sketches and Photos
 
