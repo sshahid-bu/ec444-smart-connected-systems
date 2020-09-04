@@ -1,12 +1,12 @@
 #  Skill Name
 
-Author: FirstName LastName
+Author: Shazor Shahid
 
-Date: YYYY-MM-DD
+Date: 2020-09-04
 -----
 
 ## Summary
-
+access to Piazza confirmed
 
 ## Sketches and Photos
 
