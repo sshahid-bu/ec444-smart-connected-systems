@@ -1,7 +1,6 @@
-#  Skill Name
-Uploading Video to Cloud
+#  Uploading Video to Cloud
 
-Author: FirstName LastName
+Author: Shazor Shahid
 
 Date: 2020-09-07
 -----
