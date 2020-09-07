@@ -1,8 +1,8 @@
-#  Skill Name
+#  Install ESP32 IDF and Toolchain and Demonstrate Blink
 
-Author: FirstName LastName
+Author: Shazor Shahid
 
-Date: YYYY-MM-DD
+Date: 2020-09-07
 -----
 
 ## Summary
