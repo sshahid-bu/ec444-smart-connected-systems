@@ -16,8 +16,8 @@ added video template for skill 04
 
 
 ## Supporting Artifacts
-<iframe width="420" height="315"
-src="https://youtu.be/ozD4nUsDr6s">
-</iframe>
+
+<a href="https://youtu.be/tTrZoOjkZ04" target="_blank"><img src="http://img.youtube.com/vi/tTrZoOjkZ04/0.jpg" 
+alt="Uploading Video to Cloud" width="240" height="180" border="10" /></a>
 
 -----
