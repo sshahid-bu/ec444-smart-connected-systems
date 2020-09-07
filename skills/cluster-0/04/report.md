@@ -1,12 +1,13 @@
 #  Skill Name
+Uploading Video to Cloud
 
 Author: FirstName LastName
 
-Date: YYYY-MM-DD
+Date: 2020-09-07
 -----
 
 ## Summary
-
+added video template for skill 04
 
 ## Sketches and Photos
 
@@ -15,6 +16,8 @@ Date: YYYY-MM-DD
 
 
 ## Supporting Artifacts
-
+<iframe width="420" height="315"
+src="https://youtu.be/ozD4nUsDr6s">
+</iframe>
 
 -----
