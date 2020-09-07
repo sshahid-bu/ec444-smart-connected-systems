@@ -1,4 +1,4 @@
-#  Skill Name
+#  Get Access to Piazza and Post Something
 
 Author: Shazor Shahid
 

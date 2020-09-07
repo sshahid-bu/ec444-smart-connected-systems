@@ -1,5 +1,5 @@
-#  Skill Name
-Skill 01
+#  Setup Editors and IDEs
+
 Author: Shazor Shahid
 
 Date: 2020-09-04
