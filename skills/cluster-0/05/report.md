@@ -6,7 +6,8 @@ Date: 2020-09-07
 -----
 
 ## Summary
-
+flashed hello_world, confirmed working, uploaded screenshot
+flashed blink, confirmed working, uploaded screenshot
 
 ## Sketches and Photos
 
