@@ -1,11 +1,14 @@
-#  Skill Name
+# Use GPIO to Drive LEDs
 
-Author: FirstName LastName
+Author: Shazor Shahid
 
-Date: YYYY-MM-DD
+Date: 2020-09-10
 -----
 
 ## Summary
+
+successfully wrote, flashed, demonstrated a binary counter using 4 LEDs to 
+display 0 - 15 in binary (0000 - 1111)
 
 
 ## Sketches and Photos
@@ -16,5 +19,6 @@ Date: YYYY-MM-DD
 
 ## Supporting Artifacts
 
+coming soon (video of blinking lights)
 
 -----
