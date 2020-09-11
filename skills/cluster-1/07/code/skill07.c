@@ -1,7 +1,7 @@
 // Name:        LED Binary Counter
 // Author:      Shazor Shahid sshahid@bu.edu
 // Assignment:  EC444 Quest 1 Skill 07
-// 
+// Date: September 09. 2020
 
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"

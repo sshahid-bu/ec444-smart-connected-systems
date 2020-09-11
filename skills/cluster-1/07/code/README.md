@@ -1,8 +1,4 @@
 # Code Readme
 
-Please describe what is in your code folder and subfolders. Make it
-easy for us to navigate this space.
-
-Also
-- Please provide your name and date in any code submitted
-- Indicate attributrion for any code you have adopted from elsewhere
+skill07.c contains the code that drives LED by toggling in specific order
+to demonstrate counting in binary from 0 to 15 (2^4)
