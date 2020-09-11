@@ -1,7 +1,7 @@
 // Name:        LED Binary Counter
 // Author:      Shazor Shahid sshahid@bu.edu
 // Assignment:  EC444 Quest 1 Skill 07
-// Date: September 09. 2020
+// Date:        September 09. 2020
 
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
@@ -17,7 +17,7 @@
 #define RESET(x)    gpio_reset_pin(x);
 #define ON(x)       gpio_set_level(x, 1)
 #define OFF(x)      gpio_set_level(x, 0)
-#define PAUSE       1000 / portTICK_PERIOD_MS
+#define PAUSE       500 / portTICK_PERIOD_MS
 
 void app_main(void) {
 
