@@ -19,7 +19,6 @@ display 0 - 15 in binary (0000 - 1111)
 
 ## Supporting Artifacts
 
-coming soon (video of blinking lights)
-<a href="https://drive.google.com/file/d/163fOL9W1i1p3Ix6l-Td1siTURlOO02Gf/view?usp=sharing" target="_blank"> </a>
+[LED Binary Counter demo](https://drive.google.com/file/d/163fOL9W1i1p3Ix6l-Td1siTURlOO02Gf/view?usp=sharing)
 
 -----
