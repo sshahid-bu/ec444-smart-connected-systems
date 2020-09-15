@@ -4,21 +4,11 @@
 // Source code used: UART echo example
 
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 #include "driver/uart.h"
 #include "driver/gpio.h"
 
-/**
- * This is an example which echos any data it receives on UART0 back to the sender,
- * with hardware flow control turned off. It does not use UART driver event queue.
- *
- * - Port: UART0
- * - Receive (Rx) buffer: on
- * - Transmit (Tx) buffer: off
- * - Flow control: off
- * - Event queue: off
- * - Pin assignment: use the default pins rather than making changes
- */
 
 #define EX_UART_NUM UART_NUM_0
 #define ECHO_TEST_TXD  (UART_PIN_NO_CHANGE)
@@ -35,8 +25,6 @@
 #define BUF_SIZE (1024)
 
 void app_main(void) {
-    RESET(PIN);
-    gpio_set_direction(PIN, GPIO_MODE_OUTPUT);
 
     // Configure parameters of the UART driver communication pins and install the driver
     uart_config_t uart_config = {
@@ -52,97 +40,81 @@ void app_main(void) {
     uart_set_pin(EX_UART_NUM, ECHO_TEST_TXD, ECHO_TEST_RXD, ECHO_TEST_RTS, ECHO_TEST_CTS);
     uart_driver_install(EX_UART_NUM, BUF_SIZE * 2, 0, 0, NULL, 0);
 
+    RESET(PIN);
+    gpio_set_direction(PIN, GPIO_MODE_OUTPUT);
+
     // Configure a temporary buffer for the incoming data
     // uint8_t *data = (uint8_t *) malloc(BUF_SIZE);
 
     char        input[BUF_SIZE];
     char        parse[BUF_SIZE];
+    int         len;
     int         i           = 0;
     int         mode        = 0;    // 0 = toggle mode, 1 = echo mode, 2 = int-hex mode
     bool        ledOnOff    = 0;    // 0 = off, 1 = on
     const int   decimals    = 2;
-
-    printf("toggle mode\n");
+    
 
     while (1) {
-        // Read data from the UART
-        // int len = uart_read_bytes(EX_UART_NUM, data, BUF_SIZE, 20 / portTICK_RATE_MS);
-        // Write data back to the UART
+            // Read
+        // int len = uart_read_bytes(EX_UART_NUM, data, BUF_SIZE, 20 / portTICK_RATE_MS); 
+            // Write
         // if (len > 0) { printf("Read: %c \n", *data); }
-        int len = uart_read_bytes(EX_UART_NUM, input, BUF_SIZE, 20 / portTICK_RATE_MS);
-        if (len > 0) { printf("Read %c\n", input[0]); }
+        // int len = uart_read_bytes(EX_UART_NUM, input, BUF_SIZE, 20 / portTICK_RATE_MS);
+        // if (len > 0) { printf("Read %c\n", *input); }
 
         printf("toggle mode\n");
         while (mode == 0) {
             len = uart_read_bytes(EX_UART_NUM, input, BUF_SIZE, 20 / portTICK_RATE_MS);
             if (len > 0) {
-                if (input[0] == 's') { mode = 1; break; }
+                if (input[0] == 't') {
+                    printf("Read: %c\n", input[0]);
 
-                else if (input[0] == 't') {
-                    printf("read: %c", input[0]);
                     ledOnOff = !ledOnOff;
                     if (ledOnOff) { ON(PIN); }
                     else if (!ledOnOff) { OFF(PIN); }
                 }
+                else if (input[0] == 's') { mode = 1; break; }
             }
+            uart_flush(EX_UART_NUM);
         }
 
-        printf("echo mode\n");
+        printf("echo mode\n"); i = 0;
         while (mode == 1) {
             len = uart_read_bytes(EX_UART_NUM, input, BUF_SIZE, 20 / portTICK_RATE_MS);
-            if (len>0) {
+            if (len > 0) {
+                if (parse[0] == 's' && ( input[0] == '\n' || input[0] == '\r') ) { mode = 2; break; }
 
-                if (input[0] == 's') { mode = 2; break; }
-
-                else if (input[0] != '\n') {
-                    parse[i] = input[0];    // if valid characters, add to new array to store
-                    printf("%c ", parse[i]);
-                    i++;                    // increment place in array
+                if (isalpha(input[0]) || isspace(input[0])) {
+                    parse[i] = input[0];
+                    i++;
                 }
-                else if (input[0] == '\n') {
-                    // print out current array
-                    printf("echo: ");
-                    for (int j = 0; j < i; j++) { printf("%c", parse[i]); }
-                    i = 0; // reset i
+                if (input[0] == '\n' || input[0] == '\r') {
+                    parse[i] = '\0';
+                    printf("\necho: %s\n", parse);
+                    i = 0; parse[0] = '\0';
                 }
             }
+            uart_flush(EX_UART_NUM);
         }
-        printf("hex to dec\n");
+
+        printf("hex to dec\n"); i = 0;
         while (mode == 2) {
             len = uart_read_bytes(EX_UART_NUM, input, BUF_SIZE, 20 / portTICK_RATE_MS);
             if (len>0) {
-                i = 0;
-                if (input[0] == 's') { mode = 0; break; }
-                else if (isdigit(input[0])) {
-                    i++;
+                if (isdigit(input[0]) && i < decimals) {
                     parse[i] = input[0];
-                    if (i==decimals) {
-                        int newInt = 0;
-                        for (int j = 0; j < decimals; j++ ) {
-                            newInt += parse[j];
-                        }
-                        printf("hex: %X\n", newInt);
-                    }
+                    parse[i+1] = '\0';
+                    i++;
                 }
-            }
-        }
-/*
-
-        if (len > 0 && mode == 1) {
-            if (input[0] != '\n') { 
-                parse[i] = input[0]; i++; printf("%c",parse[i]);
-            }
-            else if (input[0] == '\n') {
-                for (int j = 0; j<i; j++) { 
-                    printf("%c", parse[j]); 
+                if (i == decimals || input[0] == '\n' || input[0] == '\r') {
+                    int number = atoi(parse);
+                    printf("\nhex: %X\n ", number);
+                    i = 0; parse[0] = '\0';
                 }
-                i = 0;
+                else if (input[0] == 's') { mode = 0; break; }
             }
-            if (input[0] == 's') { 
-                mode++; printf("dec to hex mode\n"); 
-            }
+            uart_flush(EX_UART_NUM);
         }
-
-*/
     }
 }
