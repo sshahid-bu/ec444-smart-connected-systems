@@ -1,6 +1,6 @@
 # Shahid-Shazor
 
-Hello, I am Shazor Shahid. I keep my repositories organized and well documented. 
+Hello, I am Shazor Shahid. I keep my repositories organized and well documented.
 In general, each skill exists in a cluster subfolder.
 
 ------
@@ -13,7 +13,7 @@ GitHub repos managed in ~/github/repos and code is copied for pushing into repo
 
 ------
 
-> get_idf      
+> get_idf
 
 sets current directory to work with idf tools
 
@@ -22,4 +22,3 @@ sets current directory to work with idf tools
 (where XX is number of port connected through Windows (COMXX))
 
 builds, flashes, and opens SERIAL connection to view and input on ESP32
-

@@ -1,12 +1,13 @@
-#  Skill Name
+#  Console IO
 
-Author: FirstName LastName
+Author: Shazor Shahid
 
-Date: YYYY-MM-DD
+Date: 2020-09-18
 -----
 
 ## Summary
 
+able to interface, write, read from ESP32
 
 ## Sketches and Photos
 
@@ -16,5 +17,6 @@ Date: YYYY-MM-DD
 
 ## Supporting Artifacts
 
+![](./images/q1_s06_UART-io.PNG)
 
 -----

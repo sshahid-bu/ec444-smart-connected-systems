@@ -18,5 +18,8 @@ flashed blink, confirmed working, uploaded screenshot
 
 ## Supporting Artifacts
 
+![](./images/ec444_quest0_skill5.PNG)
+
+![](./images/ec444_quest0_skill5_blink.PNG)
 
 -----

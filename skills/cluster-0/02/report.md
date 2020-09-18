@@ -16,5 +16,6 @@ created new repo for Skill 02
 
 ## Supporting Artifacts
 
+![Proof](./images/quest0_skill2_process.PNG)
 
 -----
