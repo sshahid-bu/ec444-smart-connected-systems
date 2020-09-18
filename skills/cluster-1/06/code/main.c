@@ -83,7 +83,7 @@ void app_main(void) {
         while (mode == 1) {
             len = uart_read_bytes(EX_UART_NUM, input, BUF_SIZE, 20 / portTICK_RATE_MS);
             if (len > 0) {
-                if (parse[0] == 's' && ( input[0] == '\n' || input[0] == '\r') ) { mode = 2; break; }
+                if (parse[0] == 's' && (i == 1) &&  ( parse[1] == '\n' || input[0] == '\r') ) { mode = 2; break; }
 
                 if (isalpha(input[0]) || isspace(input[0])) {
                     parse[i] = input[0];
