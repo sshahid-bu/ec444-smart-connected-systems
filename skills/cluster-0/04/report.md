@@ -1,22 +1,21 @@
-#  Uploading Video to Cloud
+# Uploading Video to Cloud
 
 Author: Shazor Shahid
 
 Date: 2020-09-07
+
 -----
 
 ## Summary
-added video template for skill 04
+
+added proper markdown video template
 
 ## Sketches and Photos
 
-
 ## Modules, Tools, Source Used Including Attribution
-
 
 ## Supporting Artifacts
 
-<a href="https://youtu.be/tTrZoOjkZ04" target="_blank"><img src="http://img.youtube.com/vi/tTrZoOjkZ04/0.jpg" 
-alt="Uploading Video to Cloud" width="240" height="180" border="10" /></a>
+[![Uploading Video to Cloud](http://img.youtube.com/vi/tTrZoOjkZ04/0.jpg)](https://youtu.be/tTrZoOjkZ04 " ")
 
 -----
