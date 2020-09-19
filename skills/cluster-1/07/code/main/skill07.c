@@ -1,7 +1,6 @@
-// Name:        LED Binary Counter
-// Author:      Shazor Shahid sshahid@bu.edu
-// Assignment:  EC444 Quest 1 Skill 07
-// Date:        September 09. 2020
+// Skill Name:      LED Binary Counter
+// Author, Email:   Shazor Shahid, sshahid@bu.edu
+// Assignment:      EC444 Quest 1 Skill 07
 
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
@@ -17,46 +16,45 @@
 #define RESET(x)    gpio_reset_pin(x);
 #define ON(x)       gpio_set_level(x, 1)
 #define OFF(x)      gpio_set_level(x, 0)
-#define PAUSE       500 / portTICK_PERIOD_MS
+#define PAUSE       2000 / portTICK_PERIOD_MS
 
 void app_main(void) {
-
-    RESET(N1); 
-    RESET(N2); 
-    RESET(N3); 
+    // Reset all pins
+    RESET(N1);
+    RESET(N2);
+    RESET(N3);
     RESET(N4);
-    gpio_set_direction(N1, GPIO_MODE_OUTPUT); 
+    // Set all pins to output-mode
+    gpio_set_direction(N1, GPIO_MODE_OUTPUT);
     gpio_set_direction(N2, GPIO_MODE_OUTPUT);
-    gpio_set_direction(N3, GPIO_MODE_OUTPUT); 
+    gpio_set_direction(N3, GPIO_MODE_OUTPUT);
     gpio_set_direction(N4, GPIO_MODE_OUTPUT);
-    
-    int num = 0; 
-    
+
+    int num = 0;
+
     while(1) {
-        if (num >= 16) { 
+        if (num >= 16) {
             printf("reset\n");
-            num = 0; 
-            OFF(N1); 
-            OFF(N2); 
-            OFF(N3); 
-            OFF(N4);
-            vTaskDelay(PAUSE);
-        } 
-        if (num == 0) {
-            printf("num: 0000\n");
-            OFF(N1); 
-            OFF(N2); 
-            OFF(N3); 
+            num = 0;
+            OFF(N1);
+            OFF(N2);
+            OFF(N3);
             OFF(N4);
             vTaskDelay(PAUSE);
         }
-        
+        if (num == 0) {
+            printf("num: 0000\n");
+            OFF(N1);
+            OFF(N2);
+            OFF(N3);
+            OFF(N4);
+            vTaskDelay(PAUSE);
+        }
         num = num + 1;
-
         while(num < 16) {
-            OFF(N1); 
-            OFF(N2); 
-            OFF(N3); 
+            OFF(N1);
+            OFF(N2);
+            OFF(N3);
             OFF(N4);
             switch(num) {
                 case 1:
@@ -152,23 +150,6 @@ void app_main(void) {
                     vTaskDelay(PAUSE);
                     break;
             } break;
-        
         }
-
-        /*
-        gpio_set_level(N1, 1);
-        gpio_set_level(N2, 1);
-        gpio_set_level(N3, 1);
-        gpio_set_level(N4, 1);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-
-        printf("Turning off the LED\n");
-        gpio_set_level(N1, 0);
-        gpio_set_level(N2, 0);
-        gpio_set_level(N3, 0);
-        gpio_set_level(N4, 0);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        */
     }
-
 }
