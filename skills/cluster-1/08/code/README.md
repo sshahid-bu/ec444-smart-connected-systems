@@ -1,8 +1,6 @@
 # Code Readme
 
-Please describe what is in your code folder and subfolders. Make it
-easy for us to navigate this space.
-
-Also
-- Please provide your name and date in any code submitted
-- Indicate attributrion for any code you have adopted from elsewhere
+Code changed from example provided by EC444.
+Initializes the I2C display, uses UART to communicate over Serial connection.
+User inputs 4 characters, those characters are checked against the Bitmap array, and the corresponding Bitmaps get sent to the I2C display.
+User must end ESP monitor and restart to display 4 new characters.

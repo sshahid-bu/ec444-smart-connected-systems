@@ -1,20 +1,19 @@
-#  Skill Name
+# Alphanumeric I2C Display
 
-Author: FirstName LastName
+Author: Shazor Shahid
 
-Date: YYYY-MM-DD
+Date: 2020-09-17
+
 -----
 
 ## Summary
 
-
 ## Sketches and Photos
-
 
 ## Modules, Tools, Source Used Including Attribution
 
-
 ## Supporting Artifacts
 
+(images will be uploaded)
 
 -----
