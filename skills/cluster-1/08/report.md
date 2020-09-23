@@ -14,6 +14,12 @@ Date: 2020-09-17
 
 ## Supporting Artifacts
 
-(images will be uploaded)
+Console Input
+
+![Console Input](./images/q1_s08_i2c_console.PNG)
+
+I2C Display
+
+![I2C Display](./images/q1_s08_i2c.jpg)
 
 -----
