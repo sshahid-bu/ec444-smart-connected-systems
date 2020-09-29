@@ -3,7 +3,6 @@
 // Assignment:      EC444 Quest 2 Skill 12
 
 #include <stdio.h>
-#include <stdlib.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/adc.h"
@@ -35,12 +34,7 @@
 #define DEFAULT_VREF            1100              //Use adc2_vref_to_gpio() to obtain a better estimate
 #define NO_OF_SAMPLES           64                //Multisampling
 // custom shortcuts
-#define BUTTON                  32                // pin 32
-#define RESET(x)                gpio_reset_pin(x);
-#define ON(x)                   gpio_set_level(x, 1);
-#define OFF(x)                  gpio_set_level(x, 0);
-#define PAUSE                   1250 / portTICK_PERIOD_MS
-#define BOOL_TOG(x)             (x = !x);
+#define PAUSE                   1000 / portTICK_PERIOD_MS
 
 static esp_adc_cal_characteristics_t *adc_chars;
 static const adc_channel_t channel = ADC_CHANNEL_6;//GPIO34 if ADC1, GPIO14 if ADC2
@@ -177,7 +171,18 @@ static void i2c_scanner() {
   printf("\n");
 }
 
-static void i2c_zero() {
+static void i2c_display(void *arg) {
+  // Debug
+  int ret;
+  printf(">> Test Alphanumeric Display: \n");
+  // Set up routines
+  ret = alpha_oscillator();       // Turn on alpha oscillator
+  if(ret == ESP_OK) {printf("- oscillator: ok \n");}
+  ret = no_blink();               // Set display blink off
+  if(ret == ESP_OK) {printf("- blink: off \n");}
+  ret = set_brightness_max(0xF);  // Set brightness max
+  if(ret == ESP_OK) {printf("- brightness: max \n");}
+
   uint16_t displayBuffer[8];
   displayBuffer[3] = intfonttable[0];
   displayBuffer[2] = intfonttable[0];
@@ -195,21 +200,6 @@ static void i2c_zero() {
   i2c_master_stop(cmd4);
   ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd4, 1000 / portTICK_RATE_MS);
   i2c_cmd_link_delete(cmd4);
-}
-
-static void i2c_display(void *arg) {
-  // Debug
-  int ret;
-  printf(">> Test Alphanumeric Display: \n");
-  // Set up routines
-  ret = alpha_oscillator();       // Turn on alpha oscillator
-  if(ret == ESP_OK) {printf("- oscillator: ok \n");}
-  ret = no_blink();               // Set display blink off
-  if(ret == ESP_OK) {printf("- blink: off \n");}
-  ret = set_brightness_max(0xF);  // Set brightness max
-  if(ret == ESP_OK) {printf("- brightness: max \n");}
-
-  i2c_zero();
 
   //Check if Two Point or Vref are burned into eFuse
   check_efuse();
@@ -272,12 +262,6 @@ static void i2c_display(void *arg) {
 }
 
 void init(void) {
-  // PIN CONFIG
-  RESET(BUTTON);
-  gpio_set_direction(BUTTON, GPIO_MODE_INPUT);
-  gpio_pulldown_en(BUTTON);
-  gpio_intr_enable(BUTTON);
-
   // I2C CONFIG
   i2c_master_init();
   i2c_scanner();
