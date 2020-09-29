@@ -7,7 +7,7 @@ In general, each skill exists in a cluster subfolder.
 
 ESP-IDF workflow:
 
-installed on WSL Ubuntu,  ~/esp folder contains IDF and example projects
+installed on WSL Ubuntu, ~/esp folder contains IDF and example projects
 
 GitHub repos and skills managed in ~/github/repos
 
