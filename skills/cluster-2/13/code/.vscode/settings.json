@@ -12,6 +12,8 @@
   "files.associations": {
     "task.h": "c",
     "*.inc": "c",
-    "*.ipp": "c"
+    "*.ipp": "c",
+    "*.tcc": "cpp",
+    "cmath": "cpp"
   }
 }

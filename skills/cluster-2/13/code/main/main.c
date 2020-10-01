@@ -2,6 +2,14 @@
 // Author, Email:   Shazor Shahid, sshahid@bu.edu
 // Assignment:      EC444 Quest 2 Skill 13
 
+/*
+Reference:
+https://www.jameco.com/Jameco/workshop/TechTip/temperature-measurement-ntc-thermistors.html
+
+Schematic:
+(GND - R - (V_out) - Thermistor - 3V)
+*/
+
 #include <stdio.h>
 #include <math.h>
 #include "freertos/FreeRTOS.h"
@@ -13,8 +21,10 @@
 #define DEFAULT_VREF  1100  //Use adc2_vref_to_gpio() to obtain a better estimate
 #define SAMPLES       32    //Multisampling
 // custom shortcuts
-#define PAUSE         2000 / portTICK_PERIOD_MS // 2 seconds
-#define ADC_MAX       3134                      // self-measured max voltage using db11 and 3.3v 
+#define PAUSE         2000/portTICK_PERIOD_MS // 2 seconds
+#define ADC_MAX       3300.0
+#define INV_B         1.0 / 3435.0
+#define INV_ROOM      1.0 / 298.15
 
 static esp_adc_cal_characteristics_t *adc_chars;
 static const adc_channel_t channel  = ADC_CHANNEL_6; //GPIO34 if ADC1, GPIO14 if ADC2
@@ -46,25 +56,24 @@ static void print_char_val_type(esp_adc_cal_value_t val_type) {
   }
 }
 
-static void read_temperature(void *args) {
+static void read_temp(void *args) {
   //Check if Two Point or Vref are burned into eFuse
   check_efuse();
   //Configure ADC
   if (unit == ADC_UNIT_1) {
     adc1_config_width(ADC_WIDTH_BIT_12);
     adc1_config_channel_atten(channel, atten);
-  } else {
-    adc2_config_channel_atten((adc2_channel_t)channel, atten);
-  }
+  } else { adc2_config_channel_atten((adc2_channel_t)channel, atten); }
   //Characterize ADC
   adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
-  esp_adc_cal_value_t val_type =
-    esp_adc_cal_characterize(unit, atten, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
+  esp_adc_cal_value_t val_type = esp_adc_cal_characterize(
+    unit, atten, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
   print_char_val_type(val_type);
 
   //Continuously sample ADC1
   while (1) {
-    float adc_reading = 0;
+    float adc_reading = 0,
+          temperature;
     //Multisampling
     for (int i = 0; i < SAMPLES; i++) {
       if (unit == ADC_UNIT_1) {
@@ -80,27 +89,17 @@ static void read_temperature(void *args) {
     //Convert adc_reading to voltage in mV
     uint32_t voltage;
     voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
-    printf("Raw: %f\tVoltage: %dmV\n", adc_reading, voltage);
+    //Convert voltage to temperature
+    temperature = INV_ROOM + ( INV_B * log( (ADC_MAX/voltage)-1) );
+    temperature = 1 / temperature; // in Kelvin
+    printf("Raw: %f\t V: %dmV\t Temp: %f\n", adc_reading, voltage, temperature-273.15);
 
-    //const float B         = 3435;
-    //const float t_room    = 298.15;
-    //const float resistor  = 10000;
-    //float resistance;
-
-    //resistance = resistor * voltage / ADC_MAX - voltage;
-    //printf("resistance = %f\n", resistance);
-
-    //float temperature;
-    //temperature = (B * t_room) / (B - (t_room * log(resistor/resistance)));
-    //printf("temperature: %f\n", temperature-273.15);
-  
-    vTaskDelay(pdMS_TO_TICKS(2000));
+    vTaskDelay(pdMS_TO_TICKS(1000));
 
     // 3410 raw value for 0 Celsius
-
   }
 }
 
 void app_main(void) {
-  xTaskCreate(read_temperature, "read_temperature", 2048, NULL, configMAX_PRIORITIES-1, NULL);
+  xTaskCreate(read_temp, "read_temp", 2048, NULL, configMAX_PRIORITIES-1, NULL);
 }
