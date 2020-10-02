@@ -95,8 +95,6 @@ static void read_temp(void *args) {
     printf("Raw: %f\t V: %dmV\t Temp: %f\n", adc_reading, voltage, temperature-273.15);
 
     vTaskDelay(pdMS_TO_TICKS(1000));
-
-    // 3410 raw value for 0 Celsius
   }
 }
 
