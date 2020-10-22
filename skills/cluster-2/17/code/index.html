@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Char using CSV Data</title>
+    <script type="text/javascript" src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+    <script type="text/javascript">
+      window.onload = function () {
+        var dataPoints = [];
+
+        function getDataPointsFromVSV(csv) {
+          var dataPoints = csvLines = points = [];
+          csvLines = csv.split(/[\r?\n|\r|\n]+/);
+
+          for (var i = 0; i < csvLines.length; i++) {
+            if (csvLines[i].length > 0) {
+              points = csvLines[i].split(',');
+              datapoints.push({
+                x: parseFloat(points[1]),
+                y: parseFloat(points[0]),
+                
+              });
+            }
+            return dataPoints;
+          }
+        }
+
+        $.get('data/stocks-csv.txt', function(data) {
+          date = getDataPointsFromVSV(data);
+          var chart = new CanvasJS.Chart("chartContainer", {
+            title: { text: "Sensor Data", },
+            data: [{ type: "series", dataPoints: getDataPointsFromCSV(data) }]
+          });
+          chart.render();
+        });
+
+        function toggleDataSeries(e){
+	        if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+		        e.dataSeries.visible = false;
+          } else { e.dataSeries.visible = true; }
+          chart.render();
+        }
+
+      }
+    </script>
+  </head>
+  <body>
+    <div id="chartContainer" style="width:100%; height:300px;"></div>
+  </body>
+</html>
