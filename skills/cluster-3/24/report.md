@@ -1,20 +1,17 @@
-#  Skill Name
+# Use PWM to Control Power Delivery to LED
 
-Author: FirstName LastName
+Author: Shazor Shahid
 
-Date: YYYY-MM-DD
+Date: 2020-10-23
+
 -----
 
 ## Summary
 
-
 ## Sketches and Photos
-
 
 ## Modules, Tools, Source Used Including Attribution
 
-
 ## Supporting Artifacts
-
 
 -----
