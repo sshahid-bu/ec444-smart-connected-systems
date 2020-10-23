@@ -14,4 +14,7 @@ Date: 2020-10-23
 
 ## Supporting Artifacts
 
+![Console Input](./images/q3_s24_pwm.PNG)
+
+![Cicuit Setup](./images/q3_s24_pwm_2.jpg)
 -----
