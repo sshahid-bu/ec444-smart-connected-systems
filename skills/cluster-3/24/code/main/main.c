@@ -1,185 +1,97 @@
-// Name: Shazor Shahid
-// Skill: Use PWM to Control Power Delivery to LED
-//
+// Skill Name:      Use PWM to Control Power Delivery to LED
+// Author, Email:   Shazor Shahid, sshahid@bu.edu
+// Assignment:      EC444 Quest 3 Skill 24
 
-/* LEDC (LED Controller) fade example
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
+// Adapted from ESP-IDF LEDC (LED Controller) fade example
 
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/ledc.h"
+#include "driver/uart.h"
 #include "esp_err.h"
 
-/*
-1. Start with initializing LEDC module:
-  a. Set the timer of LEDC first, this determines the frequency and resolution of PWM.
-  b. Then set the LEDC channel you want to use, and bind with one of the timers.
+#define LEDC_TIMER       LEDC_TIMER_1
+#define LEDC_MODE        LEDC_LOW_SPEED_MODE
+#define LEDC_CH2_GPIO    (4) // HUZZAH32 A5
+#define LEDC_CH2_CHANNEL LEDC_CHANNEL_2
+#define LEDC_TIMER_BIT   LEDC_TIMER_10_BIT
 
-2. You need first to install a default fade function, then you can use fade APIs.
+// UART
+#define UART_NUM UART_NUM_0
+#define ECHO_TXD (UART_PIN_NO_CHANGE)
+#define ECHO_RXD (UART_PIN_NO_CHANGE)
+#define ECHO_RTS (UART_PIN_NO_CHANGE)
+#define ECHO_CTS (UART_PIN_NO_CHANGE)
+#define BUF_SIZE (128)
 
-3. You can also set a target duty directly without fading.
 
-4. This example uses GPIO18/19/4/5 as LEDC output, and it will change the duty repeatedly.
-
-5. GPIO18/19 are from high speed channel group. GPIO4/5 are from low speed channel group.
-*/
-#ifdef CONFIG_IDF_TARGET_ESP32
-#define LEDC_HS_TIMER          LEDC_TIMER_0
-#define LEDC_HS_MODE           LEDC_HIGH_SPEED_MODE
-#define LEDC_HS_CH0_GPIO       (18)
-#define LEDC_HS_CH0_CHANNEL    LEDC_CHANNEL_0
-#define LEDC_HS_CH1_GPIO       (19)
-#define LEDC_HS_CH1_CHANNEL    LEDC_CHANNEL_1
-#endif
-
-#define LEDC_LS_TIMER          LEDC_TIMER_1
-#define LEDC_LS_MODE           LEDC_LOW_SPEED_MODE
-
-#ifdef CONFIG_IDF_TARGET_ESP32S2
-#define LEDC_LS_CH0_GPIO       (18)
-#define LEDC_LS_CH0_CHANNEL    LEDC_CHANNEL_0
-#define LEDC_LS_CH1_GPIO       (19)
-#define LEDC_LS_CH1_CHANNEL    LEDC_CHANNEL_1
-#endif
-
-#define LEDC_LS_CH2_GPIO       (4)
-#define LEDC_LS_CH2_CHANNEL    LEDC_CHANNEL_2
-#define LEDC_LS_CH3_GPIO       (5)
-#define LEDC_LS_CH3_CHANNEL    LEDC_CHANNEL_3
-#define LEDC_TEST_CH_NUM       (4)
-#define LEDC_TEST_DUTY         (4000)
-#define LEDC_TEST_FADE_TIME    (3000)
 
 void app_main(void) {
-  int ch;
-  /*
-    * Prepare and set configuration of timers
-    * that will be used by LED Controller
-  */
+  // Prepare and set configuration of timers that will be used by LED Controller 
   ledc_timer_config_t ledc_timer = {
-    .duty_resolution = LEDC_TIMER_13_BIT, // resolution of PWM duty
+    .duty_resolution = LEDC_TIMER_BIT, // resolution of PWM duty
     .freq_hz = 5000,                      // frequency of PWM signal
-    .speed_mode = LEDC_LS_MODE,           // timer mode
-    .timer_num = LEDC_LS_TIMER,           // timer index
+    .speed_mode = LEDC_MODE,           // timer mode
+    .timer_num = LEDC_TIMER,           // timer index
     .clk_cfg = LEDC_AUTO_CLK,             // Auto select the source clock
   };
-  // Set configuration of timer0 for high speed channels
-  ledc_timer_config(&ledc_timer);
-#ifdef CONFIG_IDF_TARGET_ESP32
-  // Prepare and set configuration of timer1 for low speed channels
-  ledc_timer.speed_mode = LEDC_HS_MODE;
-  ledc_timer.timer_num = LEDC_HS_TIMER;
-  ledc_timer_config(&ledc_timer);
-#endif
-  /*
-  Prepare individual configuration for each channel of LED Controller by selecting:
-  - controller's channel number
-  - output duty cycle, set initially to 0
-  - GPIO number where LED is connected to
-  - speed mode, either high or low
-  - timer servicing selected channel
-    Note: if different channels use one timer,
-      then frequency and bit_num of these channels will be the same
-  */
-
-  ledc_channel_config_t ledc_channel[LEDC_TEST_CH_NUM] = {
-#ifdef CONFIG_IDF_TARGET_ESP32
-  {
-    .channel    = LEDC_HS_CH0_CHANNEL,
+  ledc_channel_config_t ledc_channel = {
+    .channel    = LEDC_CH2_CHANNEL,
     .duty       = 0,
-    .gpio_num   = LEDC_HS_CH0_GPIO,
-    .speed_mode = LEDC_HS_MODE,
+    .gpio_num   = LEDC_CH2_GPIO,
+    .speed_mode = LEDC_MODE,
     .hpoint     = 0,
-    .timer_sel  = LEDC_HS_TIMER
-  },
-  {
-    .channel    = LEDC_HS_CH1_CHANNEL,
-    .duty       = 0,
-    .gpio_num   = LEDC_HS_CH1_GPIO,
-    .speed_mode = LEDC_HS_MODE,
-    .hpoint     = 0,
-    .timer_sel  = LEDC_HS_TIMER
-  },
-#elif defined CONFIG_IDF_TARGET_ESP32S2
-  {
-    .channel    = LEDC_LS_CH0_CHANNEL,
-    .duty       = 0,
-    .gpio_num   = LEDC_LS_CH0_GPIO,
-    .speed_mode = LEDC_LS_MODE,
-    .hpoint     = 0,
-    .timer_sel  = LEDC_LS_TIMER
-  },
-  {
-    .channel    = LEDC_LS_CH1_CHANNEL,
-    .duty       = 0,
-    .gpio_num   = LEDC_LS_CH1_GPIO,
-    .speed_mode = LEDC_LS_MODE,
-    .hpoint     = 0,
-    .timer_sel  = LEDC_LS_TIMER
-  },
-#endif
-    {
-      .channel    = LEDC_LS_CH2_CHANNEL,
-      .duty       = 0,
-      .gpio_num   = LEDC_LS_CH2_GPIO,
-      .speed_mode = LEDC_LS_MODE,
-      .hpoint     = 0,
-      .timer_sel  = LEDC_LS_TIMER
-    },
-    {
-      .channel    = LEDC_LS_CH3_CHANNEL,
-      .duty       = 0,
-      .gpio_num   = LEDC_LS_CH3_GPIO,
-      .speed_mode = LEDC_LS_MODE,
-      .hpoint     = 0,
-      .timer_sel  = LEDC_LS_TIMER
-    },
+    .timer_sel  = LEDC_TIMER
   };
+  ledc_timer_config(&ledc_timer); // Set configuration of timer0 for high speed channels
+  ledc_channel_config(&ledc_channel); // Set LED Controller with previously prepared configuration
+  ledc_fade_func_install(0); // Initialize fade service.
 
-    // Set LED Controller with previously prepared configuration
-  for (ch = 0; ch < LEDC_TEST_CH_NUM; ch++) {
-    ledc_channel_config(&ledc_channel[ch]);
-  }
+  uart_config_t uart_config = {
+    .baud_rate = 115200,
+    .data_bits = UART_DATA_8_BITS,
+    .parity    = UART_PARITY_DISABLE,
+    .stop_bits = UART_STOP_BITS_1,
+    .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+    .source_clk = UART_SCLK_APB,
+  };
+  uart_param_config(UART_NUM, &uart_config);
+  uart_set_pin(UART_NUM, ECHO_TXD, ECHO_RXD, ECHO_RTS, ECHO_CTS);
+  uart_driver_install(UART_NUM, BUF_SIZE * 2, 0, 0, NULL, 0);
 
-  // Initialize fade service.
-  ledc_fade_func_install(0);
+  // ledc_set_duty, ledc_update_duty
+  // lec_set_fade_with_time, ledc_fade_start
+  char userInput[4];
+  printf("\nEnter duty cycle time (in sec, max 8):\n");
 
   while (1) {
-    printf("1. LEDC fade up to duty = %d\n", LEDC_TEST_DUTY);
-      for (ch = 0; ch < LEDC_TEST_CH_NUM; ch++) {
-        ledc_set_fade_with_time(ledc_channel[ch].speed_mode,
-          ledc_channel[ch].channel, LEDC_TEST_DUTY, LEDC_TEST_FADE_TIME);
-        ledc_fade_start(ledc_channel[ch].speed_mode,
-          ledc_channel[ch].channel, LEDC_FADE_NO_WAIT);
+    int len = uart_read_bytes(UART_NUM, userInput, BUF_SIZE, 20/portTICK_RATE_MS);
+    if (len > 0) {
+      int sec = atoi(userInput);
+      double pwm = sec * 100; 
+      const int interval = 250;
+
+      printf("LEDC to duty = %f\n", pwm);
+      ledc_set_duty(ledc_channel.speed_mode, ledc_channel.channel, 0);
+      ledc_update_duty(ledc_channel.speed_mode, ledc_channel.channel);
+
+      for (int i = 1; i < sec+1; i++ ) {
+        ledc_set_duty(ledc_channel.speed_mode, ledc_channel.channel, i * pwm/sec);
+        ledc_update_duty(ledc_channel.speed_mode, ledc_channel.channel);
+        printf("going up %d\n", i);
+        vTaskDelay(interval / portTICK_RATE_MS);
       }
-    vTaskDelay(LEDC_TEST_FADE_TIME / portTICK_PERIOD_MS);
+      for (int i = sec-1; i > 0; i-- ) {
+        ledc_set_duty(ledc_channel.speed_mode, ledc_channel.channel, i * pwm/sec);
+        ledc_update_duty(ledc_channel.speed_mode, ledc_channel.channel);
+        printf("going down %d\n", i);
+        vTaskDelay(interval / portTICK_RATE_MS);
+      }
+      ledc_set_duty(ledc_channel.speed_mode, ledc_channel.channel, 0);
+      ledc_update_duty(ledc_channel.speed_mode, ledc_channel.channel);
+      printf("Enter duty cycle time: \n");
 
-    printf("2. LEDC fade down to duty = 0\n");
-    for (ch = 0; ch < LEDC_TEST_CH_NUM; ch++) {
-      ledc_set_fade_with_time(ledc_channel[ch].speed_mode,
-        ledc_channel[ch].channel, 0, LEDC_TEST_FADE_TIME);
-      ledc_fade_start(ledc_channel[ch].speed_mode,
-          ledc_channel[ch].channel, LEDC_FADE_NO_WAIT);
     }
-    vTaskDelay(LEDC_TEST_FADE_TIME / portTICK_PERIOD_MS);
-
-    printf("3. LEDC set duty = %d without fade\n", LEDC_TEST_DUTY);
-    for (ch = 0; ch < LEDC_TEST_CH_NUM; ch++) {
-      ledc_set_duty(ledc_channel[ch].speed_mode, ledc_channel[ch].channel, LEDC_TEST_DUTY);
-      ledc_update_duty(ledc_channel[ch].speed_mode, ledc_channel[ch].channel);
-    }
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-
-    printf("4. LEDC set duty = 0 without fade\n");
-    for (ch = 0; ch < LEDC_TEST_CH_NUM; ch++) {
-      ledc_set_duty(ledc_channel[ch].speed_mode, ledc_channel[ch].channel, 0);
-      ledc_update_duty(ledc_channel[ch].speed_mode, ledc_channel[ch].channel);
-    }
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
