@@ -47,15 +47,15 @@
 #define UART_RXD_INV_M    (BIT(19))
 
 // Hardware interrupt definitions
-#define GPIO_INPUT_IO_1       4
+#define GPIO_INPUT_IO_1       4 // A5
 #define ESP_INTR_FLAG_DEFAULT 0
 #define GPIO_INPUT_PIN_SEL    1ULL<<GPIO_INPUT_IO_1
 
 // LED Output pins definitions
-#define BLUEPIN   14
-#define GREENPIN  32
-#define REDPIN    15
-#define ONBOARD   13
+#define YELLOWPIN   32 // 32
+#define GREENPIN    14 // 14
+#define REDPIN      15 // 15
+#define ONBOARD     13
 
 #define TIMER_DIVIDER         16    //  Hardware timer clock divider
 #define TIMER_SCALE           (TIMER_BASE_CLK / TIMER_DIVIDER)  // to seconds
@@ -165,24 +165,21 @@ static void uart_init() {
     .flow_ctrl = UART_HW_FLOWCTRL_DISABLE
   };
   uart_param_config(UART_NUM_1, &uart_config);
-
   // Set UART pins using UART0 default pins
   uart_set_pin(UART_NUM_1, UART_TX_GPIO_NUM, UART_RX_GPIO_NUM, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-
   // Reverse receive logic line
   uart_set_line_inverse(UART_NUM_1, UART_RXD_INV_M);
-
   // Install UART driver
   uart_driver_install(UART_NUM_1, BUF_SIZE * 2, 0, 0, NULL, 0);
 }
 
 // GPIO init for LEDs
 static void led_init() {
-  gpio_pad_select_gpio(BLUEPIN);
+  gpio_pad_select_gpio(YELLOWPIN);
   gpio_pad_select_gpio(GREENPIN);
   gpio_pad_select_gpio(REDPIN);
   gpio_pad_select_gpio(ONBOARD);
-  gpio_set_direction(BLUEPIN, GPIO_MODE_OUTPUT);
+  gpio_set_direction(YELLOWPIN, GPIO_MODE_OUTPUT);
   gpio_set_direction(GREENPIN, GPIO_MODE_OUTPUT);
   gpio_set_direction(REDPIN, GPIO_MODE_OUTPUT);
   gpio_set_direction(ONBOARD, GPIO_MODE_OUTPUT);
@@ -192,22 +189,19 @@ static void led_init() {
 static void alarm_init() {
   // Select and initialize basic parameters of the timer
   timer_config_t config;
-  config.divider = TIMER_DIVIDER;
-  config.counter_dir = TIMER_COUNT_UP;
-  config.counter_en = TIMER_PAUSE;
-  config.alarm_en = TIMER_ALARM_EN;
-  config.intr_type = TIMER_INTR_LEVEL;
-  config.auto_reload = TEST_WITH_RELOAD;
+  config.divider      = TIMER_DIVIDER;
+  config.counter_dir  = TIMER_COUNT_UP;
+  config.counter_en   = TIMER_PAUSE;
+  config.alarm_en     = TIMER_ALARM_EN;
+  config.intr_type    = TIMER_INTR_LEVEL;
+  config.auto_reload  = TEST_WITH_RELOAD;
   timer_init(TIMER_GROUP_0, TIMER_0, &config);
-
   // Timer's counter will initially start from value below
   timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0x00000000ULL);
-
   // Configure the alarm value and the interrupt on alarm
   timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, TIMER_INTERVAL_10_SEC * TIMER_SCALE);
   timer_enable_intr(TIMER_GROUP_0, TIMER_0);
   timer_isr_register(TIMER_GROUP_0, TIMER_0, timer_group0_isr, (void *) TIMER_0, ESP_INTR_FLAG_IRAM, NULL);
-
   // Start timer
   timer_start(TIMER_GROUP_0, TIMER_0);
 }
@@ -299,20 +293,20 @@ void led_task(){
       case 'R' : // Red
         gpio_set_level(GREENPIN, 0);
         gpio_set_level(REDPIN, 1);
-        gpio_set_level(BLUEPIN, 0);
-        // printf("Current state: %c\n",status);
+        gpio_set_level(YELLOWPIN, 0);
+        // printf("Current state: %c\n",myColor);
         break;
       case 'Y' : // Yellow
-        gpio_set_level(GREENPIN, 1);
-        gpio_set_level(REDPIN, 1);
-        gpio_set_level(BLUEPIN, 0);
-        // printf("Current state: %c\n",status);
+        gpio_set_level(GREENPIN, 0);
+        gpio_set_level(REDPIN, 0);
+        gpio_set_level(YELLOWPIN, 1);
+        // printf("Current state: %c\n",myColor);
         break;
       case 'G' : // Green
         gpio_set_level(GREENPIN, 1);
         gpio_set_level(REDPIN, 0);
-        gpio_set_level(BLUEPIN, 0);
-        // printf("Current state: %c\n",status);
+        gpio_set_level(YELLOWPIN, 0);
+        // printf("Current state: %c\n",myColor);
         break;
     }
     vTaskDelay(100 / portTICK_PERIOD_MS);
