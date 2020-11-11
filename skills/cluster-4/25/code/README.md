@@ -1,8 +1,3 @@
-# Code Readme
+# Code Readme Skill 25 IR TX/RX
 
-Please describe what is in your code folder and subfolders. Make it
-easy for us to navigate this space.
-
-Also
-- Please provide your name and date in any code submitted
-- Indicate attributrion for any code you have adopted from elsewhere
+ir-car-beacon.c contains main driver code

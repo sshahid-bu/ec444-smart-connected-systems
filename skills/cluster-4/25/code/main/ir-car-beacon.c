@@ -68,9 +68,9 @@
 #define COLOR 'R'
 
 // Variables for my ID, minVal and status plus string fragments
-char start = 0x1B;
-char myID = (char) ID;
-char myColor = (char) COLOR;
+char start = 0x1B,
+  myID = (char) ID,
+  myColor = (char) COLOR;
 int len_out = 4;
 
 // Mutex (for resources), and Queues (for button)
@@ -80,7 +80,7 @@ static xQueueHandle timer_queue;
 
 // A simple structure to pass "events" to main task
 typedef struct {
-    int flag;     // flag for enabling stuff in timer task
+  int flag;     // flag for enabling stuff in timer task
 } timer_event_t;
 
 // System tags
@@ -244,7 +244,6 @@ void button_task(){
     }
     vTaskDelay(100 / portTICK_PERIOD_MS);
   }
-
 }
 
 // Send task -- sends payload | Start | myID | Start | myID
