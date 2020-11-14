@@ -3,6 +3,6 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := ir-car-beacon-capture
+PROJECT_NAME := ir-car-beacon
 
 include $(IDF_PATH)/make/project.mk
