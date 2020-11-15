@@ -21,4 +21,4 @@ sets current directory to work with idf tools
 
 (where XX is number of port connected through Windows (COMXX))
 
-builds, flashes, and opens SERIAL connection to view and input on ESP32
+builds, flashes, and opens monitor (Serial connection) to connected HUZZAH32
