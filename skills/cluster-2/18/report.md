@@ -21,5 +21,4 @@ set up and have working Raspberry Pi Zero W
 
 ## Supporting Artifacts
 
-(images will be uploaded soon)
 -----
