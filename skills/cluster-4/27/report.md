@@ -1,20 +1,21 @@
-#  Skill Name
+# State Models
 
-Author: FirstName LastName
+Author: Shazor Shahid
 
-Date: YYYY-MM-DD
+Date: 2020-11-20
+
 -----
 
 ## Summary
 
+finite state machine (FSM) for the whack-a-mole game
+corresponding state table
+whack-a-mole state machine provided in C
 
 ## Sketches and Photos
 
-
 ## Modules, Tools, Source Used Including Attribution
 
-
 ## Supporting Artifacts
-
 
 -----
