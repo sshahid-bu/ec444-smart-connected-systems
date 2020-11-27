@@ -1,3 +1,7 @@
+// Name: Shazor Shahid sshahid@bu.edu
+// Assignment: Skill 25 Quest 4
+// Date: 11/11/2020
+
 /* Infrared IR/UART beacons for crawler capture the flag!
    November 2019 -- Emily Lam
 
@@ -5,12 +9,12 @@
    UART Transmitter   -- pin 25 -- A1
    UART Receiver      -- pin 34 -- A2
 
-   Hardware interrupt -- pin 4 -- A5
+   Hardware interrupt -- pin 04 -- A5
    ID Indicator       -- pin 13 -- Onboard LED
 
-   Red LED            -- pin 33
-   Green LED          -- pin 32
-   Blue LED           -- Pin 14
+   R LED              -- pin 33
+   G LED              -- pin 32
+   Y LED              -- Pin 14
 
    Features:
    - Sends UART payload -- | START | myColor | myID | Checksum? |
@@ -34,11 +38,11 @@
 #include "soc/uart_reg.h"
 
 // RMT definitions
-#define RMT_TX_CHANNEL        1     // RMT channel for transmitter
-#define RMT_TX_GPIO_NUM       25    // GPIO number for transmitter signal -- A1
-#define RMT_CLK_DIV           100   // RMT counter clock divider
-#define RMT_TICK_10_US        (80000000/RMT_CLK_DIV/100000)   // RMT counter value for 10 us.(Source clock is APB clock)
-#define rmt_item32_tIMEOUT_US 9500     // RMT receiver timeout value(us)
+#define RMT_TX_CHANNEL        1                 // RMT channel for transmitter
+#define RMT_TX_GPIO_NUM       25                // GPIO number for transmitter signal -- A1
+#define RMT_CLK_DIV           100               // RMT counter clock divider
+#define RMT_TICK_10_US        (800/RMT_CLK_DIV) // RMT counter value for 10 us.(Source clock is APB clock)
+#define rmt_item32_tIMEOUT_US 9500              // RMT receiver timeout value(us)
 
 // UART definitions
 #define UART_TX_GPIO_NUM  26 // A0
@@ -49,29 +53,30 @@
 // Hardware interrupt definitions
 #define GPIO_INPUT_IO_1       4 // A5
 #define ESP_INTR_FLAG_DEFAULT 0
-#define GPIO_INPUT_PIN_SEL    1ULL<<GPIO_INPUT_IO_1
+#define GPIO_INPUT_PIN_SEL    (1ULL<<GPIO_INPUT_IO_1)
 
 // LED Output pins definitions
 #define YELLOWPIN   32 // 32
 #define GREENPIN    14 // 14
 #define REDPIN      15 // 15
-#define ONBOARD     13
+#define ONBOARD     13 // 13
 
-#define TIMER_DIVIDER         16    //  Hardware timer clock divider
-#define TIMER_SCALE           (TIMER_BASE_CLK / TIMER_DIVIDER)  // to seconds
-#define TIMER_INTERVAL_2_SEC  (2)
-#define TIMER_INTERVAL_10_SEC (10)
-#define TEST_WITH_RELOAD      1     // Testing will be done with auto reload
+#define TIMER_DIVIDER     16    //  Hardware timer clock divider
+#define TIMER_SCALE       (TIMER_BASE_CLK / TIMER_DIVIDER)  // to seconds
+#define TIMER_INT_2_SEC   (2)
+#define TIMER_INT_10_SEC  (10)
+#define TEST_WITH_RELOAD  1     // Testing will be done with auto reload
 
 // Default ID/color
-#define ID    3
-#define COLOR 'R'
+#define ID    1   // change when flashing to different board
+#define COLOR 'R' // default color
 
 // Variables for my ID, minVal and status plus string fragments
 char start = 0x1B,
   myID = (char) ID,
   myColor = (char) COLOR;
 int len_out = 4;
+bool isReceiver = false;
 
 // Mutex (for resources), and Queues (for button)
 SemaphoreHandle_t mux = NULL;
@@ -91,7 +96,6 @@ static void IRAM_ATTR gpio_isr_handler(void* arg){
   uint32_t gpio_num = (uint32_t) arg;
   xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
 }
-
 // ISR handler
 void IRAM_ATTR timer_group0_isr(void *para) {
   // Prepare basic event data, aka set flag
@@ -99,21 +103,18 @@ void IRAM_ATTR timer_group0_isr(void *para) {
   evt.flag = 1;
 
   // Yellow is shorter
-  if (myColor == 'G') { timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, TIMER_INTERVAL_2_SEC * TIMER_SCALE); }
-  else { timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, TIMER_INTERVAL_10_SEC * TIMER_SCALE); }
+  if (myColor == 'G') { timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, TIMER_INT_2_SEC * TIMER_SCALE); }
+  else { timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, TIMER_INT_10_SEC * TIMER_SCALE); }
 
   // Clear the interrupt, Timer 0 in group 0
   TIMERG0.int_clr_timers.t0 = 1;
-
   // After the alarm triggers, we need to re-enable it to trigger it next time
   TIMERG0.hw_timer[TIMER_0].config.alarm_en = TIMER_ALARM_EN;
-
   // Send the event data back to the main program task
   xQueueSendFromISR(timer_queue, &evt, NULL);
 }
 
 // Utilities ///////////////////////////////////////////////////////////////////
-
 // Checksum
 char genCheckSum(char *p, int len) {
   char temp = 0;
@@ -153,7 +154,6 @@ static void rmt_tx_init() {
   rmt_config(&rmt_tx);
   rmt_driver_install(rmt_tx.channel, 0, 0);
 }
-
 // Configure UART
 static void uart_init() {
   // Basic configs
@@ -172,7 +172,6 @@ static void uart_init() {
   // Install UART driver
   uart_driver_install(UART_NUM_1, BUF_SIZE * 2, 0, 0, NULL, 0);
 }
-
 // GPIO init for LEDs
 static void led_init() {
   gpio_pad_select_gpio(YELLOWPIN);
@@ -184,7 +183,6 @@ static void led_init() {
   gpio_set_direction(REDPIN, GPIO_MODE_OUTPUT);
   gpio_set_direction(ONBOARD, GPIO_MODE_OUTPUT);
 }
-
 // Configure timer
 static void alarm_init() {
   // Select and initialize basic parameters of the timer
@@ -199,13 +197,12 @@ static void alarm_init() {
   // Timer's counter will initially start from value below
   timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0x00000000ULL);
   // Configure the alarm value and the interrupt on alarm
-  timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, TIMER_INTERVAL_10_SEC * TIMER_SCALE);
+  timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, TIMER_INT_10_SEC * TIMER_SCALE);
   timer_enable_intr(TIMER_GROUP_0, TIMER_0);
   timer_isr_register(TIMER_GROUP_0, TIMER_0, timer_group0_isr, (void *) TIMER_0, ESP_INTR_FLAG_IRAM, NULL);
   // Start timer
   timer_start(TIMER_GROUP_0, TIMER_0);
 }
-
 // Button interrupt init
 static void button_init() {
   gpio_config_t io_conf;
@@ -228,9 +225,22 @@ static void button_init() {
   //start gpio task
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 // Tasks ///////////////////////////////////////////////////////////////////////
+// Send task -- sends payload | Start | myID | Start | myID
+void send_task(){
+    char *data_out = (char *) malloc(len_out);
+    xSemaphoreTake(mux, portMAX_DELAY);
+    data_out[0] = start;
+    data_out[1] = (char) myColor;
+    data_out[2] = (char) myID;
+    data_out[3] = genCheckSum(data_out,len_out-1);
+    ESP_LOG_BUFFER_HEXDUMP(TAG_SYSTEM, data_out, len_out, ESP_LOG_INFO);
+    uart_write_bytes(UART_NUM_1, data_out, len_out);
+    xSemaphoreGive(mux);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+}
+
+
 // Button task -- rotate through myIDs
 void button_task(){
   uint32_t io_num;
@@ -240,47 +250,40 @@ void button_task(){
       if (myID == 3) { myID = 1; }
       else { myID++; }
       xSemaphoreGive(mux);
-      printf("Button pressed.\n");
+      // OFF -> RED -> GREEN -> YELLOW -> OFF
+      if (myColor == 'R') { myColor = 'G'; }
+      else if (myColor == 'G') { myColor = 'Y'; }
+      else if (myColor == 'Y') { myColor = 'O'; }
+      else if (myColor == 'O') { myColor = 'R'; }
+      printf("myColor: %c\t myID: %d\n", myColor, myID);
+      isReceiver = !isReceiver;
+      if (!isReceiver) { send_task();}
     }
     vTaskDelay(100 / portTICK_PERIOD_MS);
   }
 }
 
-// Send task -- sends payload | Start | myID | Start | myID
-void send_task(){
-  while(1) {
-    char *data_out = (char *) malloc(len_out);
-    xSemaphoreTake(mux, portMAX_DELAY);
-    data_out[0] = start;
-    data_out[1] = (char) myColor;
-    data_out[2] = (char) myID;
-    data_out[3] = genCheckSum(data_out,len_out-1);
-    // ESP_LOG_BUFFER_HEXDUMP(TAG_SYSTEM, data_out, len_out, ESP_LOG_INFO);
 
-    uart_write_bytes(UART_NUM_1, data_out, len_out);
-    xSemaphoreGive(mux);
-
-    vTaskDelay(5 / portTICK_PERIOD_MS);
-  }
-}
-
+static int rxID, rxVal1, rxVal2;
 // Receives task -- looks for Start byte then stores received values
 void recv_task(){
-  // Buffer for input data
   uint8_t *data_in = (uint8_t *) malloc(BUF_SIZE);
   while (1) {
     int len_in = uart_read_bytes(UART_NUM_1, data_in, BUF_SIZE, 20 / portTICK_RATE_MS);
-    if (len_in >0) {
-      if (data_in[0] == start) {
-        if (checkCheckSum(data_in,len_out)) {
-          ESP_LOG_BUFFER_HEXDUMP(TAG_SYSTEM, data_in, len_out, ESP_LOG_INFO);
+    if (len_in > 0) {
+      for (int i=0; i < 24; i++) {
+        if (data_in[i] == 0x0A) {
+          rxID = data_in[i+1];
+          rxVal1 = data_in[i+2];
+          rxVal2 = data_in[i+3];
+          printf("Received comm from ID 0x%02X with value1, 0x%02X, and value2, %c\n", rxID, rxVal1, rxVal2);
+          // Signal via semaphore
+          xSemaphoreGive( mux );
+          break;
         }
       }
-    }
-    else{
-      // printf("Nothing received.\n");
-    }
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    } else { // printf("Nothing received.\n");
+    } vTaskDelay(500 / portTICK_PERIOD_MS);
   }
   free(data_in);
 }
@@ -288,7 +291,7 @@ void recv_task(){
 // LED task to light LED based on traffic state
 void led_task(){
   while(1) {
-    switch((int)myColor){
+    switch( (int)myColor ) {
       case 'R' : // Red
         gpio_set_level(GREENPIN, 0);
         gpio_set_level(REDPIN, 1);
@@ -307,7 +310,13 @@ void led_task(){
         gpio_set_level(YELLOWPIN, 0);
         // printf("Current state: %c\n",myColor);
         break;
-    }
+      case 'O' : // Off
+        gpio_set_level(GREENPIN, 0);
+        gpio_set_level(REDPIN, 0);
+        gpio_set_level(YELLOWPIN, 0);
+        // printf("Current state: %c\n",myColor);
+        break;
+    } 
     vTaskDelay(100 / portTICK_PERIOD_MS);
   }
 }
@@ -330,16 +339,15 @@ static void timer_evt_task(void *arg) {
   while (1) {
     // Create dummy structure to store structure from queue
     timer_event_t evt;
-
     // Transfer from queue
     xQueueReceive(timer_queue, &evt, portMAX_DELAY);
-
     // Do something if triggered!
     if (evt.flag == 1) {
       printf("Action!\n");
       if (myColor == 'R') { myColor = 'G'; }
       else if (myColor == 'G') { myColor = 'Y'; }
       else if (myColor == 'Y') { myColor = 'R'; }
+      else if (myColor == 'O') { myColor = 'R'; }
     }
   }
 }
@@ -347,24 +355,19 @@ static void timer_evt_task(void *arg) {
 void app_main() {
   // Mutex for current values when sending
   mux = xSemaphoreCreateMutex();
-
   // Create a FIFO queue for timer-based events
   timer_queue = xQueueCreate(10, sizeof(timer_event_t));
-
   // Create task to handle timer-based events
   xTaskCreate(timer_evt_task, "timer_evt_task", 2048, NULL, 5, NULL);
-
   // Initialize all the things
   rmt_tx_init();
   uart_init();
   led_init();
   alarm_init();
   button_init();
-
   // Create tasks for receive, send, set gpio, and button
-  xTaskCreate(recv_task, "uart_rx_task", 1024*4, NULL, configMAX_PRIORITIES, NULL);
-  xTaskCreate(send_task, "uart_tx_task", 1024*2, NULL, configMAX_PRIORITIES, NULL);
-  xTaskCreate(led_task, "set_traffic_task", 1024*2, NULL, configMAX_PRIORITIES, NULL);
-  xTaskCreate(id_task, "set_id_task", 1024*2, NULL, configMAX_PRIORITIES, NULL);
-  xTaskCreate(button_task, "button_task", 1024*2, NULL, configMAX_PRIORITIES, NULL);
+  xTaskCreate(recv_task,  "uart_rx_task", 2048, NULL, configMAX_PRIORITIES, NULL);
+  xTaskCreate(led_task,   "set_led_task", 2048, NULL, configMAX_PRIORITIES, NULL);
+  xTaskCreate(id_task,    "set_id_task",  2048, NULL, configMAX_PRIORITIES, NULL);
+  xTaskCreate(button_task,"button_task",  2048, NULL, configMAX_PRIORITIES, NULL);
 }
