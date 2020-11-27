@@ -8,6 +8,8 @@ Date: 2020-10-23
 
 ## Summary
 
+sucessfully used I2C's API to interface and read data from provided Acceleromter (ADXL343).
+
 ## Sketches and Photos
 
 ## Modules, Tools, Source Used Including Attribution
