@@ -2,12 +2,9 @@
 // Name: Shazor Shahid
 // Date: 2020-11-27
 
-/* MCPWM basic config example
- * This example will show you how to use each submodule of MCPWM unit.
- * The example can't be used without modifying the code first.
- * Edit the macros at the top of mcpwm_example_basic_config.c to enable/disable the submodules which are used in the example.
- */
+// https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/mcpwm.html#_CPPv425mcpwm_fault_input_level_t
 
+// lidar skill using PWM
 #include <stdio.h>
 #include "string.h"
 #include "freertos/FreeRTOS.h"
@@ -19,11 +16,11 @@
 #include "driver/mcpwm.h"
 #include "soc/mcpwm_periph.h"
 
-#define CAP_SIG_NUM   3       //Three capture signals
+#define CAP_SIG_NUM   2       //Three capture signals
 #define CAP0_INT_EN   BIT(27) //Capture 0 interrupt bit
-#define CAP1_INT_EN   BIT(27) //Capture 1 interrupt bit
+#define CAP1_INT_EN   BIT(28) //Capture 1 interrupt bit
 #define GPIO_CAP0_IN  27      //Set GPIO 21 as CAP0
-#define GPIO_CAP1_IN  27      //Set GPIO 27 as CAP1
+#define GPIO_CAP1_IN  27      //Set GPIO 33 as CAP1
 
 typedef struct {
   uint32_t capture_signal;
@@ -41,7 +38,9 @@ static mcpwm_dev_t *MCPWM[2] = {&MCPWM0, &MCPWM1};
 static void mcpwm_example_gpio_initialize(void) {
   printf("Initializing mcpwm gpio...\n");
   mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM_CAP_0, GPIO_CAP0_IN);
+  mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM_CAP_1, GPIO_CAP1_IN);
   gpio_pulldown_en(GPIO_CAP0_IN);  //Enable pull down on CAP0 signal
+  gpio_pulldown_en(GPIO_CAP1_IN);  //Enable pull down on CAP1 signal
 }
 
 // Set gpio 12 as our test signal that generates high-low waveform continuously,
@@ -66,20 +65,20 @@ static void gpio_test_signal(void *arg) {
 // When interrupt occurs, receive the counter value and display the time between twoz edge.
 static void disp_captured_signal(void *arg) {
   capture evt1;
-  capture evt2;
-  int64_t posEdge = 0; 
+  int64_t posEdge = 0;
   int64_t negEdge = 0;
   while (1) {
     xQueueReceive(cap_queue1, &evt1, portMAX_DELAY);
-    if (evt1.sel_cap_signal == MCPWM_SELECT_CAP0) { 
+    if (evt1.sel_cap_signal == MCPWM_SELECT_CAP0) {
       posEdge = evt1.current_time;
     }
-    xQueueReceive(cap_queue2, &evt2, portMAX_DELAY);
-    if (evt2.sel_cap_signal == MCPWM_SELECT_CAP1) {
-      negEdge = evt2.current_time;
+    if (evt1.sel_cap_signal == MCPWM_SELECT_CAP1) {
+      negEdge = evt1.current_time;
+      int64_t signal_length = negEdge - posEdge;
+      float meters = ((float)signal_length)/1000.0 - 0.30; //30cm measured offset for v1
+      printf("CAP1 - CAP0: %lld - %lld = %lld us : %f meters\n", negEdge, posEdge, signal_length, meters);
     }
-    int64_t signal_length = posEdge - negEdge;
-    printf("CAP0 - CAP1: %lld us\n", signal_length);
+    printf("loop %d\n", evt1.sel_cap_signal);
   }
 }
 
@@ -88,7 +87,6 @@ static void IRAM_ATTR isr_handler(void) {
   uint32_t mcpwm_intr_status;
   capture evt;
   mcpwm_intr_status = MCPWM[MCPWM_UNIT_0]->int_st.val; //Read interrupt status
-
   //calculate the interval in the ISR,
   //so that the interval will be always correct even when cap_queue is not handled in time and overflow.
   if (mcpwm_intr_status & CAP0_INT_EN) { //Check for interrupt on rising edge on CAP0 signal
@@ -105,7 +103,7 @@ static void IRAM_ATTR isr_handler(void) {
     evt.capture_signal = (current_cap_value[1] - previous_cap_value[1]) / (rtc_clk_apb_freq_get() / 1000000);
     previous_cap_value[1] = current_cap_value[1];
     evt.sel_cap_signal = MCPWM_SELECT_CAP1;
-    xQueueSendFromISR(cap_queue2, &evt, NULL);
+    xQueueSendFromISR(cap_queue1, &evt, NULL);
   }
   MCPWM[MCPWM_UNIT_0]->int_clr.val = mcpwm_intr_status;
 }
@@ -125,7 +123,7 @@ static void mcpwm_config(void *arg) {
   mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config); //Configure PWM0A & PWM0B with above settings
 
   //Capture configuration
-  //general practice, connect Capture to ext signal, measure time between rising or falling and take action 
+  //general practice, connect Capture to ext signal, measure time between rising or falling and take action
   //capture signal on rising edge, prescale = 0 i.e. 800,000,000 counts is equal to one second
   mcpwm_capture_enable(MCPWM_UNIT_0, MCPWM_SELECT_CAP0, MCPWM_POS_EDGE, 0);
   mcpwm_capture_enable(MCPWM_UNIT_0, MCPWM_SELECT_CAP1, MCPWM_NEG_EDGE, 0);
@@ -139,7 +137,7 @@ void app_main(void) {
   printf("Testing MCPWM...\n");
   cap_queue1 = xQueueCreate(1, sizeof(capture));
   cap_queue2 = xQueueCreate(1, sizeof(capture));
-  
+
   current_cap_value = (uint32_t *)malloc(CAP_SIG_NUM*sizeof(uint32_t));
   previous_cap_value = (uint32_t *)malloc(CAP_SIG_NUM*sizeof(uint32_t));
   xTaskCreate(disp_captured_signal, "mcpwm_config", 4096, NULL, 5, NULL);
