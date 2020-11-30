@@ -2,9 +2,9 @@
 // Name: Shazor Shahid
 // Date: 2020-11-27
 
+// https://github.com/PulsedLight3D/LIDAR-Lite-Documentation/blob/master/Docs/LIDAR-Lite-v1-docs.pdf
 // https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/mcpwm.html#_CPPv425mcpwm_fault_input_level_t
 
-// lidar skill using PWM
 #include <stdio.h>
 #include "string.h"
 #include "freertos/FreeRTOS.h"
