@@ -1,20 +1,17 @@
-#  Skill Name
+# Quest 6 Skill 1
 
-Author: FirstName LastName
+Author: Shazor Shahid
 
-Date: YYYY-MM-DD
------
+Date: 2020-12-03
+
+------
 
 ## Summary
 
-
 ## Sketches and Photos
-
 
 ## Modules, Tools, Source Used Including Attribution
 
-
 ## Supporting Artifacts
 
-
------
+------
