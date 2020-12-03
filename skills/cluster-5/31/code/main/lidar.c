@@ -66,19 +66,20 @@ static void gpio_test_signal(void *arg) {
 static void disp_captured_signal(void *arg) {
   capture evt1;
   int64_t posEdge = 0;
+  bool posEdgeFlag = false;
   int64_t negEdge = 0;
   while (1) {
     xQueueReceive(cap_queue1, &evt1, portMAX_DELAY);
     if (evt1.sel_cap_signal == MCPWM_SELECT_CAP0) {
       posEdge = evt1.current_time;
+      posEdgeFlag = true;
     }
-    if (evt1.sel_cap_signal == MCPWM_SELECT_CAP1) {
+    if (evt1.sel_cap_signal == MCPWM_SELECT_CAP1 && posEdgeFlag == true) {
       negEdge = evt1.current_time;
       int64_t signal_length = negEdge - posEdge;
       float meters = ((float)signal_length)/1000.0 - 0.30; //30cm measured offset for v1
       printf("CAP1 - CAP0: %lld - %lld = %lld us : %f meters\n", negEdge, posEdge, signal_length, meters);
     }
-    printf("loop %d\n", evt1.sel_cap_signal);
   }
 }
 
